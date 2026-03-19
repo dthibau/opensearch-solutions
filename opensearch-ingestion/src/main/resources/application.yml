@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: opensearch-ingestion
+
+opensearch:
+  host: localhost
+  port: 9200
+  scheme: http       # https si sécurité activée
+  # username: admin
+  # password: admin
+
