@@ -1,13 +1,19 @@
 package org.formation.service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.formation.model.Produit;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.core.BulkRequest;
+import org.opensearch.client.opensearch.core.BulkResponse;
+import org.opensearch.client.opensearch.core.bulk.BulkResponseItem;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -67,5 +73,44 @@ public class ProduitService {
     // Supprimer par ID
     public void delete(String id) throws IOException {
         client.delete(d -> d.index(INDEX).id(id));
+    }
+
+    public BulkStats bulkIndex(List<Produit> produits) throws IOException {
+
+        // Construire la BulkRequest
+        BulkRequest.Builder br = new BulkRequest.Builder();
+        for (Produit p : produits) {
+            br.operations(op -> op
+                    .index(i -> i
+                            .index(INDEX)
+                            .document(p)
+                    )
+            );
+        }
+
+        BulkResponse resp = client.bulk(br.build());
+
+        // Analyser la réponse item par item
+        long errors = 0;
+        if (resp.errors()) {
+            for (BulkResponseItem item : resp.items()) {
+                if (item.error() != null) {
+                    log.error("Erreur doc {}: {} ({})",
+                            item.id(),
+                            item.error().reason(),
+                            item.error().type());
+                    errors++;
+                }
+            }
+        }
+
+        return new BulkStats(produits.size() - errors, errors,
+                resp.took());
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class BulkStats {
+        private long success, errors, tookMs;
     }
 }
