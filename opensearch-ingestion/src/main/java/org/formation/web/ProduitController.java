@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -32,6 +33,38 @@ public class ProduitController {
             @RequestParam(defaultValue="500") int count)
             throws IOException {
 
+
+        var stats = produitService.bulkIndex(generateProduits(count));
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/benchmark")
+    public ResponseEntity<Map<String,Object>> benchmark(
+            @RequestParam(defaultValue="10000") int count)
+            throws IOException, InterruptedException {
+
+        List<Produit> produits = generateProduits(count);
+
+        // Test BulkRequest
+        long t1 = System.currentTimeMillis();
+        var stats1 = produitService.bulkIndex(produits);
+        long duration1 = System.currentTimeMillis() - t1;
+
+        // Test BulkIngester
+        long t2 = System.currentTimeMillis();
+        var stats2 = produitService.ingesterBulk(produits);
+        long duration2 = System.currentTimeMillis() - t2;
+
+        return ResponseEntity.ok(Map.of(
+                "count",       count,
+                "bulkRequest",  Map.of("ms", duration1,
+                        "docsPerSec", count * 1000 / duration1),
+                "bulkIngester", Map.of("ms", duration2,
+                        "docsPerSec", count * 1000 / duration2)
+        ));
+    }
+
+    private List<Produit> generateProduits(int count) {
         List<Produit> produits = IntStream.range(0, count)
                 .mapToObj(i -> Produit.builder()
                         .nom("Produit Java " + String.format("%04d", i))
@@ -44,8 +77,6 @@ public class ProduitController {
                         .actif(true)
                         .build())
                 .collect(Collectors.toList());
-
-        var stats = produitService.bulkIndex(produits);
-        return ResponseEntity.ok(stats);
+        return produits;
     }
 }

@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.formation.model.Produit;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._helpers.bulk.BulkIngester;
+import org.opensearch.client.opensearch._helpers.bulk.BulkListener;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
 import org.opensearch.client.opensearch.core.bulk.BulkResponseItem;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
@@ -112,5 +116,67 @@ public class ProduitService {
     @AllArgsConstructor
     public static class BulkStats {
         private long success, errors, tookMs;
+    }
+
+    public BulkStats ingesterBulk(List<Produit> produits)
+            throws IOException, InterruptedException {
+
+        AtomicLong success = new AtomicLong(0);
+        AtomicLong errors  = new AtomicLong(0);
+
+        // Configurer le BulkIngester
+        try (BulkIngester<Produit> ingester = BulkIngester.of(b -> b
+                .client(client)
+                .maxOperations(500)           // flush à 500 opérations
+                .maxSize(10 * 1024 * 1024L)   // ou 10 Mo
+                .flushInterval(5, TimeUnit.SECONDS)  // ou toutes les 5s
+                .listener(new BulkListener<Produit>() {
+
+                    @Override
+                    public void beforeBulk(long executionId,
+                                           BulkRequest request,
+                                           List<Produit> contexts) {
+                        log.debug("Bulk {} : {} docs",
+                                executionId, request.operations().size());
+                    }
+
+                    @Override
+                    public void afterBulk(long executionId,
+                                          BulkRequest request,
+                                          List<Produit> contexts,
+                                          BulkResponse response) {
+                        // Compter succès et erreurs
+                        response.items().forEach(item -> {
+                            if (item.error() != null) {
+                                errors.incrementAndGet();
+                                log.error("Erreur: {}",
+                                        item.error().reason());
+                            } else {
+                                success.incrementAndGet();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void afterBulk(long executionId,
+                                          BulkRequest request,
+                                          List<Produit> contexts,
+                                          Throwable failure) {
+                        log.error("Bulk {} échoué: {}",
+                                executionId, failure.getMessage());
+                        errors.addAndGet(request.operations().size());
+                    }
+                })
+        )) {
+            // Ajouter tous les documents — flush géré automatiquement
+            for (Produit p : produits) {
+                ingester.add(op -> op
+                                .index(i -> i.index(INDEX).document(p)),
+                        p   // contexte passé au listener
+                );
+            }
+        } // close() = flush final garanti
+
+        return new BulkStats(success.get(), errors.get(), 0);
     }
 }
