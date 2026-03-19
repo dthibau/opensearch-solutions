@@ -179,4 +179,24 @@ public class ProduitService {
 
         return new BulkStats(success.get(), errors.get(), 0);
     }
+
+    public void setIngestionMode(boolean enabled) throws IOException {
+        String refreshInterval = enabled ? "-1" : "1s";
+        int    replicas        = enabled ?   0  :   1 ;
+        String durability      = enabled ? "async" : "request";
+
+        client.indices().putSettings(s -> s
+                .index(INDEX)
+                .settings(settings -> settings
+                        .refreshInterval(t -> t.time(refreshInterval))
+                        .numberOfReplicas(replicas))
+        );
+        log.info("Mode ingestion {} : refresh={}, replicas={}",
+                enabled ? "ON" : "OFF", refreshInterval, replicas);
+    }
+
+    public void forceRefresh() throws IOException {
+        client.indices().refresh(r -> r.index(INDEX));
+        log.info("Refresh forcé sur {}", INDEX);
+    }
 }

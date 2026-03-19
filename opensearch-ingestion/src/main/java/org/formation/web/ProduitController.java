@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -64,16 +65,46 @@ public class ProduitController {
         ));
     }
 
+    @PostMapping("/massive")
+    public ResponseEntity<Map<String,Object>> massive(
+            @RequestParam(defaultValue="50000") int count)
+            throws IOException, InterruptedException {
+
+        // AVANT : mode ingestion
+        produitService.setIngestionMode(true);
+
+        long start = System.currentTimeMillis();
+        var stats = produitService.ingesterBulk(
+                generateProduits(count));
+        long elapsed = System.currentTimeMillis() - start;
+
+        // APRÈS : restaurer et rafraîchir
+        produitService.setIngestionMode(false);
+        produitService.forceRefresh();
+
+        return ResponseEntity.ok(Map.of(
+                "total",   count,
+                "success", stats.getSuccess(),
+                "errors",  stats.getErrors(),
+                "ms",      elapsed,
+                "docsPerSec", count * 1000 / elapsed
+        ));
+    }
+
     private List<Produit> generateProduits(int count) {
+        Random random = new Random();
+
         List<Produit> produits = IntStream.range(0, count)
                 .mapToObj(i -> Produit.builder()
-                        .nom("Produit Java " + String.format("%04d", i))
+                        .nom(List.of(
+                                "Produit Informatique "+ String.format("%04d", i),"Audio","Clavier numérique " + String.format("%04d", i),"Produit numérique " + String.format("%04d", i)
+                        ).get(random.nextInt(4) % 4))
                         .prix(Math.round(Math.random() * 490 + 10) / 1.0)
                         .stock((int)(Math.random() * 200))
                         .categorie(List.of(
                                 "Informatique","Audio","Écrans","Accessoires"
-                        ).get(i % 4))
-                        .dateAjout("2026-01-15")
+                        ).get(random.nextInt(4) % 4))
+                        .dateAjout("2026-01-"+random.nextInt(31))
                         .actif(true)
                         .build())
                 .collect(Collectors.toList());
