@@ -1,0 +1,50 @@
+# Simple config
+
+curl -X POST http://localhost:8083/connectors \
+-H "Content-Type: application/json" \
+-d '{
+ "name": "opensearch-sink",
+  "config": {
+    "connector.class":
+      "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
+      "tasks.max": "1",
+      "topics": "position",
+      "topic.index.map": "position:position_index",
+      "connection.url": "http://opensearch-node1:9200",
+      "key.ignore": "true",
+      "schema.ignore": "true",
+      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "key.converter.schemas.enable": "false",
+      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "false"
+  }
+}'
+# Suppression du topic 
+curl -X DELETE http://localhost:8083/connectors/opensearch-sink
+
+# Timestamp Kafka
+curl -X POST http://localhost:8083/connectors \
+-H "Content-Type: application/json" \
+-d '{
+ "name": "opensearch-sink",
+  "config": {
+    "connector.class":
+      "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
+      "tasks.max": "1",
+      "topics": "position",
+      "topic.index.map": "position:position_index",
+      "connection.url": "http://opensearch-node1:9200",
+      "key.ignore": "true",
+      "schema.ignore": "true",
+      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "key.converter.schemas.enable": "false",
+      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "false",
+      "transforms": "InsertField",
+      "transforms.InsertField.timestamp.field": "@timestamp",
+      "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField$Value"
+  }
+}'
+
+
+  
