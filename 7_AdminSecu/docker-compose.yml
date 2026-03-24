@@ -81,6 +81,32 @@ services:
     networks:
       - opensearch-net
 
+  # ── Nœud data n°3 ────────────────────────────────────────────
+  opensearch-node4:
+    image: opensearchproject/opensearch:3.4.0
+    container_name: os-data3
+    environment:
+      - node.name=os-data3
+      - node.roles=data
+      - cluster.name=opensearch-cluster
+      - discovery.seed_hosts=os-manager1,os-data1,os-data2,os-coord1
+      - cluster.initial_cluster_manager_nodes=os-manager1
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data4:/usr/share/opensearch/data
+    networks:
+      - opensearch-net
+
   # ── Nœud coordinating only (reçoit les requêtes clients) ─────
   opensearch-coord1:
     image: opensearchproject/opensearch:3.4.0
@@ -146,6 +172,7 @@ volumes:
   opensearch-data1:
   opensearch-data2:
   opensearch-data3:
+  opensearch-data4:
 
 networks:
   opensearch-net:

@@ -1,0 +1,38 @@
+otel-trace-pipeline:
+  source:
+    otel_trace_source:
+      ssl: false
+      port: 21890
+  buffer:
+    bounded_blocking:
+      buffer_size: 25600
+      batch_size: 400
+  processor:
+    - otel_traces:
+  sink:
+    - pipeline:
+        name: raw-trace-pipeline
+    - pipeline:
+        name: service-map-pipeline
+
+raw-trace-pipeline:
+  source:
+    pipeline:
+      name: otel-trace-pipeline
+  processor:
+    - otel_traces:
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch-node1:9200"]
+        index_type: trace-analytics-raw
+
+service-map-pipeline:
+  source:
+    pipeline:
+      name: otel-trace-pipeline
+  processor:
+    - service_map:
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch-node1:9200"]
+        index_type: trace-analytics-service-map
