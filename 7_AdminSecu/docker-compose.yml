@@ -1,0 +1,151 @@
+services:
+
+  # ── Cluster Manager dédié (ne stocke pas de données) ─────────
+  opensearch-node1:
+    image: opensearchproject/opensearch:3.4.0
+    container_name: os-manager1
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=os-manager1
+      - node.roles=cluster_manager
+      - discovery.seed_hosts=os-manager1,os-data1,os-data2,os-coord1
+      - cluster.initial_cluster_manager_nodes=os-manager1
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data1:/usr/share/opensearch/data
+    ports:
+      - 9200:9200   # REST API
+      - 9600:9600   # Performance Analyzer
+    networks:
+      - opensearch-net
+
+  # ── Nœud data n°1 ────────────────────────────────────────────
+  opensearch-node2:
+    image: opensearchproject/opensearch:3.4.0
+    container_name: os-data1
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=os-data1
+      - node.roles=data
+      - discovery.seed_hosts=os-manager1,os-data1,os-data2,os-coord1
+      - cluster.initial_cluster_manager_nodes=os-manager1
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data2:/usr/share/opensearch/data
+    networks:
+      - opensearch-net
+
+  # ── Nœud data n°2 ────────────────────────────────────────────
+  opensearch-node3:
+    image: opensearchproject/opensearch:3.4.0
+    container_name: os-data2
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=os-data2
+      - node.roles=data
+      - discovery.seed_hosts=os-manager1,os-data1,os-data2,os-coord1
+      - cluster.initial_cluster_manager_nodes=os-manager1
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data3:/usr/share/opensearch/data
+    networks:
+      - opensearch-net
+
+  # ── Nœud coordinating only (reçoit les requêtes clients) ─────
+  opensearch-coord1:
+    image: opensearchproject/opensearch:3.4.0
+    container_name: os-coord1
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=os-coord1
+      - node.roles= []                    # liste vide = coordinating only
+      - discovery.seed_hosts=os-manager1,os-data1,os-data2,os-coord1
+      - cluster.initial_cluster_manager_nodes=os-manager1
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      - opensearch-net
+  #  volumes:
+  #  - ./config/coord/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+
+  # ── OpenSearch Dashboards ─────────────────────────────────────
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3.4.0
+    container_name: opensearch-dashboards
+    ports:
+      - 5601:5601
+    expose:
+      - "5601"
+    environment:
+      # Pointe vers le nœud coordinating — point d'entrée recommandé
+      - 'OPENSEARCH_HOSTS=["http://os-coord1:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+    depends_on:
+      - opensearch-coord1
+    networks:
+      - opensearch-net
+
+  # ── Data Prepper ──────────────────────────────────────────────
+  data-prepper:
+    image: opensearchproject/data-prepper:2.14.1
+    container_name: data-prepper
+    ports:
+      - 2021:2021   # Data Prepper REST API
+      - 4900:4900   # Health check / shutdown
+      - 21890:21890 # OTLP gRPC (traces, metrics, logs)
+      - 21891:21891 # OTLP HTTP
+      - 21892:21892 # OTel metrics HTTP
+    volumes:
+      - ./data-prepper/pipelines.yaml:/usr/share/data-prepper/pipelines/pipelines.yaml
+      - ./data-prepper/data-prepper-config.yaml:/usr/share/data-prepper/config/data-prepper-config.yaml
+    depends_on:
+      - opensearch-node1
+    networks:
+      - opensearch-net
+
+volumes:
+  opensearch-data1:
+  opensearch-data2:
+  opensearch-data3:
+
+networks:
+  opensearch-net:
