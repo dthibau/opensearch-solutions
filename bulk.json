@@ -1,0 +1,10 @@
+{ "delete" : { "_id" : "1" } }
+{ "create": { "_id": "1" }}
+{"title": "My first blog entry", "text": "Just trying this out...", "date": "2014/01/01"}
+{ "delete" : { "_id" : "2" } }
+{ "create": { "_id": "2" } }
+{"title": "Stranger 8-bits Things", "text": "la série de Netflix qui a fait l’événement cet été, véritable ode aux années 80, époque de pixels et de musique MIDI", "date": "2016/01/01"}
+{ "update" : {"_id" : "2"} }
+{ "doc" : {"tags" : [ "testing" ], "views": 0} }
+{ "update" : {"_id" : "2"} }
+{ "script" : { "inline" : "ctx._source.tags.add(params.new_tag)", "params" :  { "new_tag" : "search" } } }
