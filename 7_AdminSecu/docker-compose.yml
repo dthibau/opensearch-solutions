@@ -12,9 +12,24 @@ services:
       - cluster.initial_cluster_manager_nodes=os-manager1
       - bootstrap.memory_lock=true
       - path.repo=/mnt/snapshots
+      # Transport layer (inter-nœuds)
+      - plugins.security.ssl.transport.pemcert_filepath=certs/node.pem
+      - plugins.security.ssl.transport.pemkey_filepath=certs/node-key.pem
+      - plugins.security.ssl.transport.pemtrustedcas_filepath=certs/root-ca.pem
+      - plugins.security.ssl.transport.enforce_hostname_verification=false
+
+      # REST layer (HTTPS)
+      - plugins.security.ssl.http.enabled=true
+      - plugins.security.ssl.http.pemcert_filepath=certs/http.pem
+      - plugins.security.ssl.http.pemkey_filepath=certs/http-key.pem
+      - plugins.security.ssl.http.pemtrustedcas_filepath=certs/root-ca.pem
+      - plugins.security.restapi.roles_enabled=["all_access","security_rest_api_access"]
+
+      # DN autorisés
+      - plugins.security.authcz.admin_dn=["CN=admin"]
+      - plugins.security.nodes_dn=["CN=node"]
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
-      - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
       memlock:
         soft: -1
@@ -25,6 +40,7 @@ services:
     volumes:
       - opensearch-data1:/usr/share/opensearch/data
       - ./snapshots:/mnt/snapshots
+      - ./certs:/usr/share/opensearch/config/certs
     ports:
       - 9200:9200   # REST API
       - 9600:9600   # Performance Analyzer
@@ -43,9 +59,24 @@ services:
       - cluster.initial_cluster_manager_nodes=os-manager1
       - bootstrap.memory_lock=true
       - path.repo=/mnt/snapshots
+      # Transport layer (inter-nœuds)
+      - plugins.security.ssl.transport.pemcert_filepath=certs/node.pem
+      - plugins.security.ssl.transport.pemkey_filepath=certs/node-key.pem
+      - plugins.security.ssl.transport.pemtrustedcas_filepath=certs/root-ca.pem
+      - plugins.security.ssl.transport.enforce_hostname_verification=false
+
+      # REST layer (HTTPS)
+      - plugins.security.ssl.http.enabled=true
+      - plugins.security.ssl.http.pemcert_filepath=certs/http.pem
+      - plugins.security.ssl.http.pemkey_filepath=certs/http-key.pem
+      - plugins.security.ssl.http.pemtrustedcas_filepath=certs/root-ca.pem
+      - plugins.security.restapi.roles_enabled=["all_access","security_rest_api_access"]
+
+      # DN autorisés
+      - plugins.security.authcz.admin_dn=["CN=admin"]
+      - plugins.security.nodes_dn=["CN=node"]
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
-      - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
       memlock:
         soft: -1
@@ -56,6 +87,7 @@ services:
     volumes:
       - opensearch-data2:/usr/share/opensearch/data
       - ./snapshots:/mnt/snapshots
+      - ./certs:/usr/share/opensearch/config/certs
     networks:
       - opensearch-net
 
@@ -71,9 +103,24 @@ services:
       - cluster.initial_cluster_manager_nodes=os-manager1
       - bootstrap.memory_lock=true
       - path.repo=/mnt/snapshots
+      # Transport layer (inter-nœuds)
+      - plugins.security.ssl.transport.pemcert_filepath=certs/node.pem
+      - plugins.security.ssl.transport.pemkey_filepath=certs/node-key.pem
+      - plugins.security.ssl.transport.pemtrustedcas_filepath=certs/root-ca.pem
+      - plugins.security.ssl.transport.enforce_hostname_verification=false
+      - plugins.security.restapi.roles_enabled=["all_access","security_rest_api_access"]
+
+      # REST layer (HTTPS)
+      - plugins.security.ssl.http.enabled=true
+      - plugins.security.ssl.http.pemcert_filepath=certs/http.pem
+      - plugins.security.ssl.http.pemkey_filepath=certs/http-key.pem
+      - plugins.security.ssl.http.pemtrustedcas_filepath=certs/root-ca.pem
+
+      # DN autorisés
+      - plugins.security.authcz.admin_dn=["CN=admin"]
+      - plugins.security.nodes_dn=["CN=node"]
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
-      - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
       memlock:
         soft: -1
@@ -84,6 +131,7 @@ services:
     volumes:
       - opensearch-data3:/usr/share/opensearch/data
       - ./snapshots:/mnt/snapshots
+      - ./certs:/usr/share/opensearch/config/certs
     networks:
       - opensearch-net
 
@@ -99,9 +147,24 @@ services:
       - cluster.initial_cluster_manager_nodes=os-manager1
       - bootstrap.memory_lock=true
       - path.repo=/mnt/snapshots
+      # Transport layer (inter-nœuds)anagement
+      - plugins.security.ssl.transport.pemcert_filepath=certs/node.pem
+      - plugins.security.ssl.transport.pemkey_filepath=certs/node-key.pem
+      - plugins.security.ssl.transport.pemtrustedcas_filepath=certs/root-ca.pem
+      - plugins.security.ssl.transport.enforce_hostname_verification=false
+      - plugins.security.restapi.roles_enabled=["all_access","security_rest_api_access"]
+
+      # REST layer (HTTPS)
+      - plugins.security.ssl.http.enabled=true
+      - plugins.security.ssl.http.pemcert_filepath=certs/http.pem
+      - plugins.security.ssl.http.pemkey_filepath=certs/http-key.pem
+      - plugins.security.ssl.http.pemtrustedcas_filepath=certs/root-ca.pem
+
+      # DN autorisés
+      - plugins.security.authcz.admin_dn=["CN=admin"]
+      - plugins.security.nodes_dn=["CN=node"]
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
-      - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
       memlock:
         soft: -1
@@ -112,6 +175,7 @@ services:
     volumes:
       - opensearch-data4:/usr/share/opensearch/data
       - ./snapshots:/mnt/snapshots
+      - ./certs:/usr/share/opensearch/config/certs
     networks:
       - opensearch-net
 
@@ -126,9 +190,24 @@ services:
       - discovery.seed_hosts=os-manager1,os-data1,os-data2,os-coord1
       - cluster.initial_cluster_manager_nodes=os-manager1
       - bootstrap.memory_lock=true
+      # Transport layer (inter-nœuds)
+      - plugins.security.ssl.transport.pemcert_filepath=certs/node.pem
+      - plugins.security.ssl.transport.pemkey_filepath=certs/node-key.pem
+      - plugins.security.ssl.transport.pemtrustedcas_filepath=certs/root-ca.pem
+      - plugins.security.ssl.transport.enforce_hostname_verification=false
+      - plugins.security.restapi.roles_enabled=["all_access","security_rest_api_access"]
+
+      # REST layer (HTTPS)
+      - plugins.security.ssl.http.enabled=true
+      - plugins.security.ssl.http.pemcert_filepath=certs/http.pem
+      - plugins.security.ssl.http.pemkey_filepath=certs/http-key.pem
+      - plugins.security.ssl.http.pemtrustedcas_filepath=certs/root-ca.pem
+
+      # DN autorisés
+      - plugins.security.authcz.admin_dn=["CN=admin"]
+      - plugins.security.nodes_dn=["CN=node"]
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
-      - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
       memlock:
         soft: -1
@@ -138,7 +217,8 @@ services:
         hard: 65536
     networks:
       - opensearch-net
-  #  volumes:
+    volumes:
+      - ./certs:/usr/share/opensearch/config/certs
   #  - ./config/coord/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
 
   # ── OpenSearch Dashboards ─────────────────────────────────────
@@ -151,8 +231,13 @@ services:
       - "5601"
     environment:
       # Pointe vers le nœud coordinating — point d'entrée recommandé
-      - 'OPENSEARCH_HOSTS=["http://os-coord1:9200"]'
-      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+      - OPENSEARCH_HOSTS=["https://os-coord1:9200"]
+      - OPENSEARCH_USERNAME=kibanaserver
+      - OPENSEARCH_PASSWORD=kibanaserver
+      - OPENSEARCH_SSL_VERIFICATIONMODE=none
+    volumes:
+    - ./dashboards/opensearch_dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+    - ./certs:/usr/share/opensearch-dashboards/config/certs:ro
     depends_on:
       - opensearch-coord1
     networks:
@@ -171,6 +256,7 @@ services:
     volumes:
       - ./data-prepper/pipelines.yaml:/usr/share/data-prepper/pipelines/pipelines.yaml
       - ./data-prepper/data-prepper-config.yaml:/usr/share/data-prepper/config/data-prepper-config.yaml
+      - ./certs/root-ca.pem:/usr/share/data-prepper/certs/root-ca.pem:ro
     depends_on:
       - opensearch-node1
     networks:
