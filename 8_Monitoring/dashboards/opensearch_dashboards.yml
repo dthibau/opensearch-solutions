@@ -1,0 +1,21 @@
+server.host: '0.0.0.0'
+server.ssl.enabled: true
+server.ssl.certificate: /usr/share/opensearch-dashboards/config/certs/http.pem
+server.ssl.key: /usr/share/opensearch-dashboards/config/certs/http-key.pem
+opensearch.hosts: ["https://os-coord1:9200"]   # ← correct
+opensearch.ssl.verificationMode: none
+opensearch.username: kibanaserver
+opensearch.password: kibanaserver
+opensearch.requestHeadersWhitelist: [authorization, securitytenant]
+opensearch_security.multitenancy.enabled: true
+opensearch_security.multitenancy.tenants.preferred: [Private, Global]
+opensearch_security.readonly_mode.roles: [kibana_read_only]
+# ✅ Cookie sécurisé — true car SSL est activé
+opensearch_security.cookie.secure: true
+# ✅ Obligatoire, min 32 caractères
+opensearch_security.cookie.password: "changeme_min32chars_motdepassefort!!"
+
+csp.rules:
+  - "script-src 'unsafe-eval' 'unsafe-inline' 'self'"
+  - "worker-src blob: 'self'"
+  - "style-src 'unsafe-inline' 'self'"

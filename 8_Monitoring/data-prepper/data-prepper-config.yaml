@@ -1,0 +1,2 @@
+ssl: false   # Désactive HTTPS sur l'API 4900
+

@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+
+  - job_name: opensearch
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true   # certificat auto-signé
+    basic_auth:
+      username: admin
+      password: admin
+    metrics_path: /_prometheus/metrics
+    static_configs:
+      - targets:
+          - os-manager1:9200
+          - os-data1:9200
+          - os-data2:9200
+          - os-data3:9200
+          - os-coord1:9200
